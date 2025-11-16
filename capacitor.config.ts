@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     url: 'https://unit-converter-three-steel.vercel.app',
-    androidScheme: 'https'
+    androidScheme: 'https',
+    allowNavigation: ['unit-converter-three-steel.vercel.app']
   }
 };
 

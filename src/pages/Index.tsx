@@ -5,6 +5,7 @@ import LengthConverter from "@/components/LengthConverter";
 import { Thermometer, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import { Download } from "lucide-react";
 
 const Index = () => {
@@ -12,10 +13,10 @@ const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const apkUrl = useMemo(() => {
+  const baseUrl = useMemo(() => {
     return (
-      import.meta.env.VITE_APK_URL ??
-      "https://unit-converter-three-steel.vercel.app/app-debug.apk"
+      import.meta.env.VITE_BASE_URL ??
+      (typeof location !== "undefined" ? location.origin : "https://unit-converter-three-steel.vercel.app")
     );
   }, []);
 
@@ -30,7 +31,18 @@ const Index = () => {
     setDownloadProgress(0);
 
     try {
-      const response = await fetch(apkUrl, { cache: "no-store" });
+      // Fetch version metadata
+      const metaResp = await fetch(`${baseUrl}/version.json`, { cache: "no-store" });
+      if (!metaResp.ok) throw new Error("Unable to fetch version info");
+      const meta = await metaResp.json();
+      const expectedHash: string | undefined = meta?.sha256;
+      const versionName: string = meta?.versionName ?? "unknown";
+      const apkPath: string = meta?.apkPath ?? "/app-debug.apk";
+      const downloadUrl = apkPath.startsWith("http") ? apkPath : `${baseUrl}${apkPath}`;
+
+      toast.info(`Starting download (v${versionName})`);
+
+      const response = await fetch(downloadUrl, { cache: "no-store" });
       if (!response.ok || !response.body) {
         throw new Error("Failed to start download");
       }
@@ -56,6 +68,19 @@ const Index = () => {
 
       const blob = new Blob(chunks, { type: "application/vnd.android.package-archive" });
 
+      // Integrity check if hash provided
+      if (expectedHash && crypto?.subtle) {
+        const buf = await blob.arrayBuffer();
+        const digest = await crypto.subtle.digest("SHA-256", buf);
+        const hex = Array.from(new Uint8Array(digest))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")
+          .toUpperCase();
+        if (hex !== expectedHash.toUpperCase()) {
+          throw new Error("Integrity check failed for APK");
+        }
+      }
+
       const objectUrl = URL.createObjectURL(blob);
 
       const contentDisposition = response.headers.get("Content-Disposition") || "";
@@ -71,10 +96,12 @@ const Index = () => {
 
       setDownloadProgress(100);
       setIsDownloading(false);
+      toast.success(`Download complete (v${versionName})`);
       setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
     } catch (err: any) {
       setIsDownloading(false);
       setDownloadError(err?.message || "Download failed");
+      toast.error(err?.message || "Download failed");
     }
   };
 
