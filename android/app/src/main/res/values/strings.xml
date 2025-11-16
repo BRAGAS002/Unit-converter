@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">unit-swift-app</string>
+    <string name="title_activity_main">unit-swift-app</string>
+    <string name="package_name">com.unitswiftapp.app</string>
+    <string name="custom_url_scheme">com.unitswiftapp.app</string>
+</resources>
