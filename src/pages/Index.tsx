@@ -13,11 +13,18 @@ const Index = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const apkUrl = useMemo(() => {
-    return import.meta.env.VITE_APK_URL ?? "/app-release.apk";
+    return (
+      import.meta.env.VITE_APK_URL ??
+      "https://unit-converter-three-steel.vercel.app/app-debug.apk"
+    );
   }, []);
 
   const handleDownload = async () => {
     if (isDownloading) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setDownloadError("You are offline. Connect to the internet to download.");
+      return;
+    }
     setDownloadError(null);
     setIsDownloading(true);
     setDownloadProgress(0);

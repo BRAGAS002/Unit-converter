@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'unit-swift-app',
   webDir: 'dist',
   server: {
+    url: 'https://unit-converter-three-steel.vercel.app',
     androidScheme: 'https'
   }
 };

@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void load() {
-    super.load();
+    // Do not load the server URL, force loading from local assets
+    // super.load();
   }
 }
